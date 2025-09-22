@@ -10,7 +10,7 @@ import p2p.quickShare.service.FileService;
 import java.io.IOException;
 import java.net.URL;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000" , "https://quickshare.parthmaha.in"})
 @RestController
 @RequestMapping("/api/files")
 public class FileController {
