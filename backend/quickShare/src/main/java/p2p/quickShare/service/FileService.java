@@ -1,132 +1,170 @@
 package p2p.quickShare.service;
 
+import com.amazonaws.HttpMethod;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
-import software.amazon.awssdk.core.ResponseBytes;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import p2p.quickShare.models.FileMetadata;
+import p2p.quickShare.repository.FileRepository;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.util.List;
-import java.util.Random;
+import java.net.URL;
+import java.util.*;
 
 @Service
+@RequiredArgsConstructor
 public class FileService {
-    private final S3Client s3Client;
+
+
+    private final AmazonS3 s3Client;
+
+    private final FileRepository fileRepository;
 
     @Value("${aws.s3.bucket}")
     private String bucketName;
 
-    @Value("${aws.profile:default}")
-    private String awsProfile;
+    @Value("${app.file.expiry.hours:24}")
+    private long expiryHours;
 
-    @Autowired
-    public FileService() {
-        this.s3Client = S3Client.builder()
-                .region(Region.AP_SOUTH_1)
-                .credentialsProvider(ProfileCredentialsProvider.create(awsProfile))
-                .build();
-    }
+    @Value("${app.base.url}")
+    private String baseUrl;
 
-    public void uploadFile(MultipartFile file, String fileId, String shareCode) {
-        try {
-            // Virus scan placeholder (integrate ClamAV via Lambda for production)
-            // if (!scanFile(file)) throw new RuntimeException("Virus detected");
+    private final Random random = new Random();
 
-            // Upload file to S3
-            String key = "files/" + fileId;
-            s3Client.putObject(PutObjectRequest.builder()
-                    .bucket(bucketName)
-                    .key(key)
-                    .build(), software.amazon.awssdk.core.sync.RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
-
-            // Add metadata as S3 object tags
-            long expirationTime = Instant.now().plusSeconds(7 * 24 * 3600).getEpochSecond();
-            List<Tag> tags = List.of(
-                    software.amazon.awssdk.services.s3.model.Tag.builder().key("shareCode").value(shareCode).build(),
-                    software.amazon.awssdk.services.s3.model.Tag.builder().key("fileName").value(file.getOriginalFilename()).build(),
-                    software.amazon.awssdk.services.s3.model.Tag.builder().key("expirationTime").value(String.valueOf(expirationTime)).build()
-            );
-            s3Client.putObjectTagging(PutObjectTaggingRequest.builder()
-                    .bucket(bucketName)
-                    .key(key)
-                    .tagging(Tagging.builder().tagSet(tags).build())
-                    .build());
-        } catch (IOException e) {
-            throw new RuntimeException("Upload failed", e);
-        }
-    }
-
-    public ResponseEntity<byte[]> downloadFile(String shareCode) {
-        // Find object by shareCode tag
-        ListObjectsV2Request listRequest = ListObjectsV2Request.builder()
-                .bucket(bucketName)
-                .prefix("files/")
-                .build();
-        ListObjectsV2Response listResponse = s3Client.listObjectsV2(listRequest);
-        String fileKey = null;
-        String fileName = null;
-
-        for (S3Object obj : listResponse.contents()) {
-            GetObjectTaggingRequest tagRequest = GetObjectTaggingRequest.builder()
-                    .bucket(bucketName)
-                    .key(obj.key())
-                    .build();
-            GetObjectTaggingResponse tags = s3Client.getObjectTagging(tagRequest);
-            for (Tag tag : tags.tagSet()) {
-                if (tag.key().equals("shareCode") && tag.value().equals(shareCode)) {
-                    fileKey = obj.key();
-                    break;
-                }
-            }
-            if (fileKey != null) {
-                // Get fileName from tags
-                for (Tag tag : tags.tagSet()) {
-                    if (tag.key().equals("fileName")) {
-                        fileName = tag.value();
-                        break;
-                    }
-                }
-                break;
-            }
-        }
-
-        if (fileKey == null) {
-            return ResponseEntity.notFound().build();
-        }
-
-        // Download file from S3
-        ResponseBytes<GetObjectResponse> object = s3Client.getObjectAsBytes(GetObjectRequest.builder()
-                .bucket(bucketName)
-                .key(fileKey)
-                .build());
-
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(object.asByteArray());
+    public String generateShareId() {
+        return UUID.randomUUID().toString().substring(0, 8); // Short unique code
     }
 
     public String generateShareCode() {
-        String chars = "0123456789";
-        Random rnd = new Random();
-        StringBuilder code = new StringBuilder(6);
-        for (int i = 0; i < 6; i++) {
-            code.append(chars.charAt(rnd.nextInt(chars.length())));
-        }
-        return code.toString();
+        return String.format("%06d", random.nextInt(1000000)); // 6-digit OTP
     }
 
-    private boolean scanFile(MultipartFile file) {
-        // Placeholder for ClamAV integration
-        return true;
+    public String uploadFilesToS3(MultipartFile[] files) throws IOException {
+        if (files == null || files.length == 0) {
+            throw new IllegalArgumentException("No files uploaded");
+        }
+
+        String shareId = generateShareId();
+        String shareCode = generateUniqueShareCode();
+        long expiryTime = System.currentTimeMillis() / 1000 + expiryHours * 3600;
+
+        for (MultipartFile file : files) {
+            if (file.isEmpty()) continue;
+            String fileName = file.getOriginalFilename();
+            if (fileName == null || fileName.isEmpty()) continue;
+            String s3Key = shareId + "/" + fileName;
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType(file.getContentType());
+            metadata.setContentLength(file.getSize());
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, s3Key, file.getInputStream(), metadata);
+            s3Client.putObject(putObjectRequest);
+
+            FileMetadata metadataRecord = new FileMetadata();
+            metadataRecord.setShareId(shareId);
+            metadataRecord.setFileName(fileName);
+            metadataRecord.setS3Key(s3Key);
+            metadataRecord.setExpiryTime(expiryTime);
+            metadataRecord.setShareCode(shareCode);
+            fileRepository.save(metadataRecord);
+        }
+
+        return shareId;
+    }
+
+    private String generateUniqueShareCode() {
+        String shareCode="";
+        boolean unique = false;
+        int attempts = 0;
+        final int maxAttempts = 5;
+        while (!unique && attempts < maxAttempts) {
+            shareCode = generateShareCode();
+            if (fileRepository.findByShareCode(shareCode).isEmpty()) {
+                unique = true;
+            }
+            attempts++;
+        }
+        if (!unique || shareCode == null) {
+            throw new RuntimeException("Unable to generate unique share code.");
+        }
+        return shareCode;
+    }
+
+    public String getShareableLink(String shareId) {
+        List<FileMetadata> metadataList = fileRepository.findAllByShareId(shareId);
+        if (metadataList == null || metadataList.isEmpty()) {
+            throw new RuntimeException("File not found");
+        }
+        FileMetadata metadata = metadataList.get(0);
+        if (System.currentTimeMillis() / 1000 > metadata.getExpiryTime()) {
+            throw new RuntimeException("File expired");
+        }
+        return baseUrl + "/download/" + shareId + "?code=" + metadata.getShareCode();
+    }
+
+    public String getShareIdByCode(String code) {
+        List<FileMetadata> metadataList = fileRepository.findByShareCode(code);
+
+        if (metadataList == null || metadataList.isEmpty()) {
+            throw new RuntimeException("Invalid or expired share code");
+        }
+
+        FileMetadata metadata = metadataList.get(0);
+        if (System.currentTimeMillis() / 1000 > metadata.getExpiryTime()) {
+            throw new RuntimeException("Share code expired");
+        }
+        return metadata.getShareId();
+    }
+
+    public List<FileDownloadInfo> getPresignedDownloadUrls(String shareId, String code) {
+        List<FileMetadata> files = fileRepository.findAllByShareId(shareId);
+        if (files == null || files.isEmpty()) throw new RuntimeException("Files not found");
+        if (System.currentTimeMillis() / 1000 > files.get(0).getExpiryTime()) throw new RuntimeException("Files expired");
+        if (code != null && !code.equals(files.get(0).getShareCode())) throw new RuntimeException("Invalid share code");
+
+        List<FileDownloadInfo> fileInfos = new ArrayList<>();
+        for (FileMetadata file : files) {
+            // Generate the pre-signed URL
+            GeneratePresignedUrlRequest request = new GeneratePresignedUrlRequest(bucketName, file.getS3Key())
+                    .withMethod(HttpMethod.GET)
+                    .withExpiration(new Date(System.currentTimeMillis() + 3600 * 1000)); // 1 hour expiry
+            URL url = s3Client.generatePresignedUrl(request);
+
+            // Get file size from S3 metadata
+            S3Object s3Object = s3Client.getObject(bucketName, file.getS3Key());
+            long fileSize = s3Object.getObjectMetadata().getContentLength();
+
+            fileInfos.add(new FileDownloadInfo(file.getFileName(), fileSize, url.toString()));
+        }
+        return fileInfos;
+    }
+
+    public String getShareCodeByShareId(String shareId) {
+        List<FileMetadata> metadataList = fileRepository.findAllByShareId(shareId);
+
+        if (metadataList == null || metadataList.isEmpty()) {
+            throw new RuntimeException("File not found");
+        }
+
+        return metadataList.get(0).getShareCode();
+    }
+
+    public static class FileDownloadInfo {
+        public final String name;
+        public final long size;
+        public final String url;
+
+        public FileDownloadInfo(String name, long size, String url) {
+            this.name = name;
+            this.size = size;
+            this.url = url;
+        }
     }
 }

@@ -9,5 +9,4 @@ public class QuickShareApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(QuickShareApplication.class, args);
 	}
-
 }

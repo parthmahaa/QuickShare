@@ -79,21 +79,34 @@ export default function FileSharePage() {
   }, []);
 
   const uploadFiles = async () => {
-  setIsUploading(true);
-  setUploadProgress(0);
-  try {
-    const uploadFiles = files.map(fileData => fileData.file); 
-    const result = await upload({ files: uploadFiles }); 
-    if (result.error) throw new Error(result.error);
-    setShareData({ shareId: result.shareId, shareLink: result.shareLink, shareCode: result.shareCode });
-    showNotification("Files uploaded successfully!", "success");
-  } catch (err: any) {
-    setError(err.message);
-    showNotification("Upload failed", "error");
-  } finally {
-    setIsUploading(false);
-  }
-};
+    setIsUploading(true);
+    setUploadProgress(0);
+    setError(null);
+    try {
+      const filesToUpload = files.map((fileData) => fileData.file);
+
+      const result = await upload({
+        files: filesToUpload,
+        onUploadProgress: setUploadProgress,
+      });
+
+      if (result.error) throw new Error(result.error);
+      
+      setShareData({
+        shareId: result.shareId,
+        shareLink: result.shareLink,
+        shareCode: result.shareCode,
+      });
+      showNotification("Files uploaded successfully!", "success");
+
+    } catch (err: any) {
+      setError(err.message || "An unknown error occurred.");
+      showNotification("Upload failed", "error");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
 
   const copyToClipboard = useCallback(async (text: string, type: string) => {
     try {

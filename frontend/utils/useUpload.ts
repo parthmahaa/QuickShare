@@ -1,47 +1,68 @@
-"use client";
+// src/utils/useUpload.ts
 
 import { useState } from "react";
 
-interface UploadResult {
+// Define the structure of the successful response from your backend
+interface UploadResponse {
   shareId: string;
   shareLink: string;
   shareCode: string;
-  error?: string;
 }
 
-interface UseUploadOptions {
+// Define the options for our upload function, including the new callback
+interface UploadOptions {
   files: File[];
+  onUploadProgress?: (progress: number) => void;
 }
 
-export default function useUpload(): [
-  (options: UseUploadOptions) => Promise<UploadResult>,
-  { loading: boolean }
-] {
+// Define the structure of the return value
+type UploadResult = UploadResponse & { error?: string };
+type UploadFunction = (options: UploadOptions) => Promise<UploadResult>;
+
+export default function useUpload(): [UploadFunction, { loading: boolean }] {
   const [loading, setLoading] = useState(false);
 
-  const upload = async ({ files }: UseUploadOptions): Promise<UploadResult> => {
+  // This function now returns a Promise that wraps the XHR logic
+  const upload = ({ files, onUploadProgress }: UploadOptions): Promise<UploadResult> => {
     setLoading(true);
-    try {
-      const formData = new FormData();
-      files.forEach(file => formData.append("file", file)); // Append each file with the same key "file"
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/files/upload`, {
-        method: "POST",
-        body: formData,
+      // Attach the progress event listener to track upload progress
+      xhr.upload.addEventListener("progress", (event) => {
+        if (event.lengthComputable && onUploadProgress) {
+          const percentage = (event.loaded / event.total) * 100;
+          onUploadProgress(percentage);
+        }
       });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        throw new Error(`Failed to upload file: ${errorText}`);
-      }
+      // Handle successful completion of the upload
+      xhr.addEventListener("load", () => {
+        setLoading(false);
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const response = JSON.parse(xhr.responseText) as UploadResponse;
+          resolve(response);
+        } else {
+          reject(new Error(xhr.responseText || "Upload failed with status: " + xhr.status));
+        }
+      });
 
-      const data: UploadResult = await res.json();
-      return data;
-    } catch (err) {
-      return { shareId: "", shareLink: "", shareCode: "", error: (err as Error).message };
-    } finally {
-      setLoading(false);
-    }
+      // Handle network errors
+      xhr.addEventListener("error", () => {
+        setLoading(false);
+        reject(new Error("A network error occurred during the upload."));
+      });
+
+      // Set up and send the request
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append("file", file);
+      });
+
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/files/upload`;
+      xhr.open("POST", apiUrl, true);
+      xhr.send(formData);
+    });
   };
 
   return [upload, { loading }];
