@@ -1,6 +1,6 @@
-2025-09-22T22:38:38.428+05:30  INFO 4852 --- [quickshare-backend] [main] p.quickShare.QuickShareApplicationTests  : Starting QuickShareApplicationTests using Java 24.0.1 with PID 4852 (started by PARTH in D:\Code\QuickShare\backend\quickShare)
-2025-09-22T22:38:38.429+05:30  INFO 4852 --- [quickshare-backend] [main] p.quickShare.QuickShareApplicationTests  : No active profile set, falling back to 1 default profile: "default"
-2025-09-22T22:38:39.459+05:30  WARN 4852 --- [quickshare-backend] [main] com.amazonaws.util.VersionInfoUtils      : The AWS SDK for Java 1.x entered maintenance mode starting July 31, 2024 and will reach end of support on December 31, 2025. For more information, see https://aws.amazon.com/blogs/developer/the-aws-sdk-for-java-1-x-is-in-maintenance-mode-effective-july-31-2024/
+2025-09-23T01:17:16.899+05:30  INFO 1944 --- [quickshare-backend] [main] p.quickShare.QuickShareApplicationTests  : Starting QuickShareApplicationTests using Java 24.0.1 with PID 1944 (started by PARTH in D:\Code\QuickShare\backend\quickShare)
+2025-09-23T01:17:16.903+05:30  INFO 1944 --- [quickshare-backend] [main] p.quickShare.QuickShareApplicationTests  : No active profile set, falling back to 1 default profile: "default"
+2025-09-23T01:17:17.901+05:30  WARN 1944 --- [quickshare-backend] [main] com.amazonaws.util.VersionInfoUtils      : The AWS SDK for Java 1.x entered maintenance mode starting July 31, 2024 and will reach end of support on December 31, 2025. For more information, see https://aws.amazon.com/blogs/developer/the-aws-sdk-for-java-1-x-is-in-maintenance-mode-effective-july-31-2024/
 You can print where on the file system the AWS SDK for Java 1.x core runtime is located by setting the AWS_JAVA_V1_PRINT_LOCATION environment variable or aws.java.v1.printLocation system property to 'true'.
 This message can be disabled by setting the AWS_JAVA_V1_DISABLE_DEPRECATION_ANNOUNCEMENT environment variable or aws.java.v1.disableDeprecationAnnouncement system property to 'true'.
 The AWS SDK for Java 1.x is being used here:
@@ -18,12 +18,12 @@ at com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper.<init>(EC2Container
 at com.amazonaws.auth.DefaultAWSCredentialsProviderChain.<init>(DefaultAWSCredentialsProviderChain.java:60)
 at com.amazonaws.auth.DefaultAWSCredentialsProviderChain.<clinit>(DefaultAWSCredentialsProviderChain.java:54)
 at com.amazonaws.services.s3.AmazonS3ClientBuilder.standard(AmazonS3ClientBuilder.java:46)
-at p2p.quickShare.Config.AppConfig.amazonS3Client(AppConfig.java:28)
-at p2p.quickShare.Config.AppConfig$$SpringCGLIB$$0.CGLIB$amazonS3Client$2(<generated>)
+at p2p.quickShare.Config.AppConfig.s3Client(AppConfig.java:49)
+at p2p.quickShare.Config.AppConfig$$SpringCGLIB$$0.CGLIB$s3Client$0(<generated>)
 at p2p.quickShare.Config.AppConfig$$SpringCGLIB$$FastClass$$1.invoke(<generated>)
 at org.springframework.cglib.proxy.MethodProxy.invokeSuper(MethodProxy.java:258)
 at org.springframework.context.annotation.ConfigurationClassEnhancer$BeanMethodInterceptor.intercept(ConfigurationClassEnhancer.java:400)
-at p2p.quickShare.Config.AppConfig$$SpringCGLIB$$0.amazonS3Client(<generated>)
+at p2p.quickShare.Config.AppConfig$$SpringCGLIB$$0.s3Client(<generated>)
 at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:104)
 at java.base/java.lang.reflect.Method.invoke(Method.java:565)
 at org.springframework.beans.factory.support.SimpleInstantiationStrategy.lambda$instantiate$0(SimpleInstantiationStrategy.java:172)
@@ -39,8 +39,7 @@ at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBea
 at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373)
 at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337)
 at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202)
-at org.springframework.beans.factory.config.DependencyDescriptor.resolveCandidate(DependencyDescriptor.java:254)
-at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1752)
+at org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1690)
 at org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1635)
 at org.springframework.beans.factory.support.ConstructorResolver.resolveAutowiredArgument(ConstructorResolver.java:913)
 at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:791)
@@ -162,5 +161,5 @@ at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter
 at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
 at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
 at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
-2025-09-22T22:38:40.928+05:30  INFO 4852 --- [quickshare-backend] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
-2025-09-22T22:38:40.992+05:30  INFO 4852 --- [quickshare-backend] [main] p.quickShare.QuickShareApplicationTests  : Started QuickShareApplicationTests in 2.895 seconds (process running for 3.89)
+2025-09-23T01:17:19.216+05:30  INFO 1944 --- [quickshare-backend] [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
+2025-09-23T01:17:19.270+05:30  INFO 1944 --- [quickshare-backend] [main] p.quickShare.QuickShareApplicationTests  : Started QuickShareApplicationTests in 2.732 seconds (process running for 3.88)
