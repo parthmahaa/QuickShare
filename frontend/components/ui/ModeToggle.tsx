@@ -7,8 +7,8 @@ interface ModeToggleProps {
 
 export default function ModeToggle({ mode, onSwitch }: ModeToggleProps) {
   return (
-    <div className="flex justify-center mb-8">
-      <div className="bg-gray-800/50 rounded-lg p-1 backdrop-blur-sm border border-gray-700">
+    <div className="flex justify-center mt-10 mb-8">
+      <div className="bg-gray-800/50 gap rounded-lg p-1 backdrop-blur-sm border border-gray-700">
         <button
           onClick={() => onSwitch("share")}
           className={`px-6 py-2 rounded-md font-medium transition-all ${
