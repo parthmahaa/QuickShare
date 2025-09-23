@@ -1857,3 +1857,5 @@ com.amazonaws.services.s3.model.AmazonS3Exception: User: arn:aws:iam::2402249863
 	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.44.jar:10.1.44]
 	at java.base/java.lang.Thread.run(Thread.java:1583) ~[na:na]
 
+2025-09-23T18:30:46.634+05:30  INFO 3552 --- [quickshare-backend] [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown        : Commencing graceful shutdown. Waiting for active requests to complete
+2025-09-23T18:30:46.714+05:30  INFO 3552 --- [quickshare-backend] [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown        : Graceful shutdown complete
