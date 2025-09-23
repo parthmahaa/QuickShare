@@ -140,11 +140,7 @@ export default function FileSharePage() {
         throw new Error("Invalid share ID or code.");
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/files/download/${shareId}?code=${code}`,{
-        headers: {
-          'X-Client-Request': 'true'
-        }
-      });
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/files/download/${shareId}?code=${code}`);
       if (!response.ok) throw new Error(await response.text());
       
       const filesData = await response.json();
