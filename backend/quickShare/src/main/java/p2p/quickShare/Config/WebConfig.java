@@ -1,4 +1,4 @@
-package p2p.quickShare.Config;
+package p2p.quickShare.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
