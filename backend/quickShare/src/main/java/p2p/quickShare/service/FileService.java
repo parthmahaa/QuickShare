@@ -2,13 +2,8 @@ package p2p.quickShare.service;
 
 import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.amazonaws.services.s3.model.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -102,11 +97,12 @@ public class FileService {
         if (metadataList == null || metadataList.isEmpty()) {
             throw new RuntimeException("File not found");
         }
-        FileMetadata metadata = metadataList.get(0);
+        FileMetadata metadata = metadataList.getFirst();
         if (System.currentTimeMillis() / 1000 > metadata.getExpiryTime()) {
             throw new RuntimeException("File expired");
         }
-        return baseUrl + "/download/" + shareId + "?code=" + metadata.getShareCode();
+
+        return baseUrl + "/api/files/download/" + shareId + "?code=" + metadata.getShareCode();
     }
 
     public String getShareIdByCode(String code) {
@@ -116,7 +112,7 @@ public class FileService {
             throw new RuntimeException("Invalid or expired share code");
         }
 
-        FileMetadata metadata = metadataList.get(0);
+        FileMetadata metadata = metadataList.getFirst();
         if (System.currentTimeMillis() / 1000 > metadata.getExpiryTime()) {
             throw new RuntimeException("Share code expired");
         }
@@ -126,8 +122,8 @@ public class FileService {
     public List<FileDownloadInfo> getPresignedDownloadUrls(String shareId, String code) {
         List<FileMetadata> files = fileRepository.findAllByShareId(shareId);
         if (files == null || files.isEmpty()) throw new RuntimeException("Files not found");
-        if (System.currentTimeMillis() / 1000 > files.get(0).getExpiryTime()) throw new RuntimeException("Files expired");
-        if (code != null && !code.equals(files.get(0).getShareCode())) throw new RuntimeException("Invalid share code");
+        if (System.currentTimeMillis() / 1000 > files.getFirst().getExpiryTime()) throw new RuntimeException("Files expired");
+        if (code != null && !code.equals(files.getFirst().getShareCode())) throw new RuntimeException("Invalid share code");
 
         List<FileDownloadInfo> fileInfos = new ArrayList<>();
         for (FileMetadata file : files) {
@@ -146,6 +142,25 @@ public class FileService {
         return fileInfos;
     }
 
+    public List<FileMetadata> getFileMetadataForShare(String shareId, String code) {
+        List<FileMetadata> files = fileRepository.findAllByShareId(shareId);
+        if (files == null || files.isEmpty()) {
+            throw new RuntimeException("Files not found or share ID is invalid.");
+        }
+        if (System.currentTimeMillis() / 1000 > files.getFirst().getExpiryTime()) {
+            throw new RuntimeException("This share has expired.");
+        }
+        if (code != null && !code.equals(files.getFirst().getShareCode())) {
+            throw new RuntimeException("Invalid share code.");
+        }
+        return files;
+    }
+
+    public S3ObjectInputStream downloadFileFromS3(String s3Key) {
+        S3Object s3Object = s3Client.getObject(bucketName, s3Key);
+        return s3Object.getObjectContent();
+    }
+
     public String getShareCodeByShareId(String shareId) {
         List<FileMetadata> metadataList = fileRepository.findAllByShareId(shareId);
 
@@ -153,7 +168,7 @@ public class FileService {
             throw new RuntimeException("File not found");
         }
 
-        return metadataList.get(0).getShareCode();
+        return metadataList.getFirst().getShareCode();
     }
 
     public static class FileDownloadInfo {
