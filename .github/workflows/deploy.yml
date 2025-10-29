@@ -25,6 +25,10 @@ jobs:
     # 3. Cache Maven packages 
     - name: Cache Maven packages
       uses: actions/cache@v4
+      with: 
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
 
     # 4. Build with Maven 
     - name: Build with Maven
