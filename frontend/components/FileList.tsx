@@ -11,10 +11,13 @@ export default function FileList({ files, onRemoveFile }: FileListProps) {
   const totalSize = files.reduce((total, file) => total + file.size, 0);
 
   return (
-    <div>
-      <h3 className="text-lg font-semibold text-white mb-3">
-        Selected Files ({formatFileSize(totalSize)})
-      </h3>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-medium text-gray-400">
+          Selected Files
+        </h3>
+        <span className="text-xs text-gray-500">{formatFileSize(totalSize)}</span>
+      </div>
       <div className="space-y-2">
         {files.map((fileData) => (
           <FileItem

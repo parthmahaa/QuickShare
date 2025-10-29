@@ -9,25 +9,25 @@ interface NotificationProps {
 
 export default function Notification({ notification }: NotificationProps) {
   const styles = {
-    success: "bg-green-900/50 text-green-300 border-green-700",
-    error: "bg-red-900/50 text-red-300 border-red-700",
-    info: "bg-blue-900/50 text-blue-300 border-blue-700",
+    success: "bg-green-500/10 text-green-300 border-green-500/20",
+    error: "bg-red-500/10 text-red-300 border-red-500/20",
+    info: "bg-blue-500/10 text-blue-300 border-blue-500/20",
   };
 
   const Icon = {
-    success: <CheckCircle size={20} />,
-    error: <AlertCircle size={20} />,
-    info: <Clock size={20} />,
+    success: <CheckCircle size={18} />,
+    error: <AlertCircle size={18} />,
+    info: <Clock size={18} />,
   };
 
   return (
     <div
-      className={`mb-6 p-4 rounded-lg flex items-center gap-2 backdrop-blur-sm border ${
+      className={`mb-6 p-3 rounded-lg flex items-center gap-2.5 backdrop-blur-sm border text-sm ${
         styles[notification.type]
       }`}
     >
       {Icon[notification.type]}
-      {notification.message}
+      <span>{notification.message}</span>
     </div>
   );
 }

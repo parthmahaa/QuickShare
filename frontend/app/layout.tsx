@@ -9,14 +9,23 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen w-full relative bg-black ">
+      <body className="min-h-screen w-full relative bg-black flex flex-col">
         <div
           className="absolute inset-0 z-0"
           style={{
             background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(226, 232, 240, 0.15), transparent 70%), #000000",
           }}
         />
-        {children}
+        <div className="flex-1 relative z-10">
+          {children}
+        </div>
+        <footer className="relative z-10 border-t border-gray-800/50 backdrop-blur-sm">
+          <div className="max-w-4xl mx-auto px-6 py-4">
+            <p className="text-center text-xs text-gray-500">
+              © 2025 QuickShare. All rights reserved.
+            </p>
+          </div>
+        </footer>
       </body>
     </html>
   );

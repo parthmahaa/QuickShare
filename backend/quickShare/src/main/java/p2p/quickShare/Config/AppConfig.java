@@ -1,5 +1,6 @@
-package p2p.quickShare.Config;
+package p2p.quickShare.config;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -13,40 +14,12 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AppConfig {
-//    @Value("${aws.accessKeyId}")
-//    private String awsAccessKey;
-//
-//    @Value("${aws.secretKey}")
-//    private String awsSecretKey;
-//
-//    @Value("${aws.region}")
-//    private String awsRegion;
-//
-//    @Bean
-//    public AmazonS3 amazonS3Client() {
-//        BasicAWSCredentials awsCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
-//        return AmazonS3ClientBuilder.standard()
-//                .withRegion(awsRegion)
-//                .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
-//                .build();
-//    }
-//    @Bean
-//    public AmazonDynamoDB amazonDynamoDB() {
-//        BasicAWSCredentials awsCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
-//        return AmazonDynamoDBClientBuilder.standard()
-//                .withRegion(awsRegion)
-//                .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
-//                .build();
-//    }
-//
-//    @Bean
-//    public DynamoDBMapper dynamoDBMapper(AmazonDynamoDB amazonDynamoDB) {
-//        return new DynamoDBMapper(amazonDynamoDB);
-//    }
 
     @Bean
     public AmazonS3 s3Client() {
-        return AmazonS3ClientBuilder.standard().build();
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setMaxConnections(200);
+        return AmazonS3ClientBuilder.standard().withRegion("ap-south-1").withClientConfiguration(clientConfiguration).build();
     }
 
     @Bean

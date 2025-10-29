@@ -1,5 +1,5 @@
-import { ShareData } from "../../types/index";
-import { Copy } from "lucide-react";
+import type { ShareData } from "../../types/index";
+import { Copy, CheckCircle2, Clock } from "lucide-react";
 
 interface ShareSuccessProps {
   shareData: ShareData;
@@ -8,88 +8,77 @@ interface ShareSuccessProps {
 }
 
 export default function ShareSuccess({ shareData, onCopy, onReset }: ShareSuccessProps) {
-  // Derive expiry time client-side based on app.file.expiry.hours (24 hours by default)
-  const expiryTime = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+  const expiryTime = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
   return (
-    <div className="text-center">
-      <svg
-        className="mx-auto mb-4 text-green-400"
-        width="64"
-        height="64"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <circle cx="12" cy="12" r="10" />
-        <path d="M9 12l2 2l4-4" />
-      </svg>
-      <h2 className="text-2xl font-bold text-white mb-2">Files Uploaded!</h2>
-      <p className="text-gray-300 mb-6">Your file is ready to share. The link and code expire in 24 hours.</p>
+    <div className="space-y-6">
+      {/* Success Icon */}
+      <div className="flex justify-center">
+        <div className="relative">
+          <div className="absolute inset-0 bg-green-500/20 blur-xl rounded-full" />
+          <CheckCircle2 className="relative text-green-400" size={56} strokeWidth={1.5} />
+        </div>
+      </div>
 
-      {/* Share Actions */}
-      <div className="space-y-4 mb-6">
-        <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-          <label className="block text-sm font-medium text-gray-300 mb-2">Share Link</label>
+      {/* Title */}
+      <div className="text-center space-y-1">
+        <h2 className="text-2xl font-semibold text-white">Ready to Share</h2>
+        <p className="text-sm text-gray-400">Share the link or code below</p>
+      </div>
+
+      {/* Share Options */}
+      <div className="space-y-3">
+        {/* Share Link */}
+        <div className="group relative bg-gray-800/40 backdrop-blur-sm rounded-lg border border-gray-700/50 hover:border-gray-600/50 transition-all p-3">
+          <label className="text-xs font-medium text-gray-400 mb-1.5 block">Share Link</label>
           <div className="flex gap-2">
             <input
               type="text"
               value={shareData.shareLink}
               readOnly
-              className="flex-1 p-2 border border-gray-600 rounded bg-gray-800 text-white text-sm"
+              className="flex-1 bg-transparent text-white text-sm outline-none truncate"
             />
             <button
               onClick={() => onCopy(shareData.shareLink, "Link")}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="shrink-0 p-2 rounded-md bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 transition-colors"
+              aria-label="Copy link"
             >
               <Copy size={16} />
             </button>
           </div>
         </div>
-        <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-          <label className="block text-sm font-medium text-gray-300 mb-2">Share Code</label>
+
+        {/* Share Code */}
+        <div className="group relative bg-gray-800/40 backdrop-blur-sm rounded-lg border border-gray-700/50 hover:border-gray-600/50 transition-all p-3">
+          <label className="text-xs font-medium text-gray-400 mb-1.5 block">Share Code</label>
           <div className="flex gap-2">
             <input
               type="text"
               value={shareData.shareCode}
               readOnly
-              className="flex-1 p-2 border border-gray-600 rounded bg-gray-800 text-white text-sm font-mono text-center text-lg"
+              className="flex-1 bg-transparent text-white text-xl font-mono tracking-wider text-center outline-none"
             />
             <button
               onClick={() => onCopy(shareData.shareCode, "Code")}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="shrink-0 p-2 rounded-md bg-blue-600/10 text-blue-400 hover:bg-blue-600/20 transition-colors"
+              aria-label="Copy code"
             >
               <Copy size={16} />
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-2">Share this code with your recipient to download the file.</p>
         </div>
       </div>
 
-      {/* Expiry Info & Reset */}
-      <div className="bg-yellow-900/50 p-4 rounded-lg mb-6 border border-yellow-700 flex items-center gap-2 text-yellow-300">
-        <svg
-          className="text-yellow-300"
-          width="20"
-          height="20"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <polyline points="12 6 12 12 16 14" />
-        </svg>
-        <span className="text-sm">Expires: {expiryTime.toLocaleString()}</span>
+      {/* Expiry Info */}
+      <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+        <Clock size={16} className="text-amber-400 shrink-0" />
+        <span className="text-xs text-amber-300">Expires {expiryTime.toLocaleString()}</span>
       </div>
+
+      {/* Action Button */}
       <button
         onClick={onReset}
-        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
       >
         Upload More Files
       </button>

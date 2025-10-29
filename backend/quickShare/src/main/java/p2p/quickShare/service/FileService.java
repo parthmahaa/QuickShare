@@ -4,6 +4,7 @@ import com.amazonaws.HttpMethod;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -11,6 +12,7 @@ import p2p.quickShare.models.FileMetadata;
 import p2p.quickShare.repository.FileRepository;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
 
@@ -59,8 +61,13 @@ public class FileService {
             ObjectMetadata metadata = new ObjectMetadata();
             metadata.setContentType(file.getContentType());
             metadata.setContentLength(file.getSize());
-            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, s3Key, file.getInputStream(), metadata);
-            s3Client.putObject(putObjectRequest);
+
+
+            try (InputStream inputStream = file.getInputStream()) {
+                PutObjectRequest putObjectRequest =
+                        new PutObjectRequest(bucketName, s3Key, inputStream, metadata);
+                s3Client.putObject(putObjectRequest);
+            }
 
             FileMetadata metadataRecord = new FileMetadata();
             metadataRecord.setShareId(shareId);

@@ -11,27 +11,30 @@ interface FileItemProps {
 
 export default function FileItem({ fileData, onRemove }: FileItemProps) {
   return (
-    <div className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+    <div className="group flex items-center gap-3 p-2.5 bg-gray-800/40 backdrop-blur-sm rounded-lg border border-gray-700/50 hover:border-gray-600/50 transition-all">
       {fileData.preview ? (
         <img
           src={fileData.preview}
           alt={fileData.name}
-          className="w-10 h-10 object-cover rounded"
+          className="w-9 h-9 object-cover rounded"
         />
       ) : (
-        <FileIcon className="text-gray-400" size={24} />
+        <div className="w-9 h-9 flex items-center justify-center bg-gray-700/50 rounded">
+          <FileIcon className="text-gray-400" size={18} />
+        </div>
       )}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white truncate">
           {fileData.name}
         </p>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-500">
           {formatFileSize(fileData.size)}
         </p>
       </div>
       <button
         onClick={() => onRemove(fileData.id)}
-        className="text-red-400 hover:text-red-300 p-1"
+        className="shrink-0 p-1.5 rounded-md text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors opacity-0 group-hover:opacity-100"
+        aria-label="Remove file"
       >
         <X size={16} />
       </button>

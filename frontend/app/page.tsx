@@ -20,7 +20,7 @@ import {
   NotificationType as NotifTypeEnum,
 } from "../types/index";
 import { formatFileSize } from "@utils/formatFileSize";
-import useUpload from "@utils/useUpload"; // Assuming this custom hook is typed
+import useUpload from "@utils/useUpload"; 
 
 const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
 
@@ -140,7 +140,11 @@ export default function FileSharePage() {
         throw new Error("Invalid share ID or code.");
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/files/download/${shareId}?code=${code}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/files/download/${shareId}?code=${code}`,{
+        headers: {
+          "X-Client-Request" : "true"
+        }
+      });
       if (!response.ok) throw new Error(await response.text());
       
       const filesData = await response.json();
@@ -166,6 +170,7 @@ export default function FileSharePage() {
   }, [receiveInput, showNotification]);
 
 
+
   const resetShareMode = () => {
     setFiles([]);
     setShareData(null);
@@ -186,13 +191,13 @@ export default function FileSharePage() {
   };
 
   return (
-    <div className="min-h-screen relative">
+    <div className="w-full">
       <Navbar />
-      <div className="relative z-10 px-4 pb-8">
-        <div className="max-w-4xl mx-auto">
+      <div className="relative z-10 px-4 pb-12">
+        <div className="max-w-3xl mx-auto">
           <ModeToggle mode={mode} onSwitch={switchMode} />
           {notification && <Notification notification={notification} />}
-          <div className="bg-gray-800/30 rounded-xl backdrop-blur-sm border border-gray-700 p-6">
+          <div className="bg-gray-800/30 rounded-xl backdrop-blur-sm border border-gray-700/50 p-6">
             {mode === "share" ? (
               shareData ? (
                 <ShareSuccess shareData={shareData} onCopy={copyToClipboard} onReset={resetShareMode} />
