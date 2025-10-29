@@ -25,6 +25,10 @@ jobs:
     # 3. Cache Maven packages 
     - name: Cache Maven packages
       uses: actions/cache@v4
+      with: 
+        path: ~/.m2
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        restore-keys: ${{ runner.os }}-m2
 
     # 4. Build with Maven 
     - name: Build with Maven
@@ -33,10 +37,16 @@ jobs:
 
     # 5. Configure AWS credentials
     - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
 
     # 6. Log in to Amazon ECR
     - name: Login to Amazon ECR
       id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
 
     # 7. Build and push Docker image
     - name: Build and push Docker image
