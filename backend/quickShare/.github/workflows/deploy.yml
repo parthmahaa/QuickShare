@@ -1,0 +1,85 @@
+# .github/workflows/deploy.yml
+
+name: Deploy Backend to AWS EC2
+
+on:
+  push:
+    branches: [ main ] # Trigger on push to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest # Use Ubuntu for the runner
+
+    steps:
+      # 1. Get the code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Set up Java
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      # 3. Cache Maven dependencies
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      # 4. Build with Maven
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
+
+      # 5. Configure AWS Credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      # 6. Log in to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # 7. Build, tag, and push Docker image to ECR
+      - name: Build and push Docker image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }} # Use commit hash for unique tag
+        run: |
+          docker build -t $ECR_REGISTRY/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG
+
+      # 8. Deploy to EC2 via SSH
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            # Log in to ECR on the EC2 instance
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin 240224986390.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
+            
+            # Pull the latest image 
+            docker pull 240224986390.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+            
+            # Stop and remove the old container 
+            docker stop quickshare || true
+            docker rm quickshare || true
+            
+            # Run the new container 
+            docker run -d \
+              -p 443:8443 \
+              -v /etc/letsencrypt:/etc/letsencrypt:ro \
+              --name quickshare \
+              -e APP_BASE_URL="https://qs.parthmaha.in" \
+              -e SERVER_SSL_KEY_STORE_PASSWORD="${{ secrets.KEYSTORE_PASSWORD }}" \
+              -e AWS_REGION="${{ secrets.AWS_REGION }}" \
+              240224986390.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
