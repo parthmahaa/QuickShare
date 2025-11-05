@@ -9,6 +9,19 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        // google tag
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-5CCNEBZ69M"></script>
+        <script>
+          {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', 'G-5CCNEBZ69M');
+        `}
+        </script>
+
+      </head>
       <body className="min-h-screen w-full relative bg-black flex flex-col">
         <div
           className="absolute inset-0 z-0"
